@@ -28,7 +28,7 @@ export default function PropertiesPage() {
       if (activeFilters.bedrooms) params.append('bedrooms', activeFilters.bedrooms);
       if (activeFilters.max_price) params.append('max_price', activeFilters.max_price);
       
-      const res = await api.get(`/properties/?$\\{params.toString()\\}`);
+      const res = await api.get(`/properties/?${params.toString()}`);
       return res.data;
     },
   });

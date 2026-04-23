@@ -30,7 +30,7 @@ class IntentProcessor:
         extracted_type = current_filters.type
         for prop_type in self.types:
             if prop_type in text:
-                extracted_type = prop_type
+                extracted_type = prop_type.capitalize()
                 break
 
         # Extract price (look for numbers that could be budget)

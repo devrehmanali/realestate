@@ -65,19 +65,19 @@ export default function ChatInterface() {
     onSuccess: (response) => {
       setMessages((prev) => [
         ...prev,
-        { 
-          role: 'assistant', 
-          content: response.data.message, 
-          recommendations: response.data.recommendations 
+        {
+          role: 'assistant',
+          content: response.data.message,
+          recommendations: response.data.recommendations
         }
       ]);
     },
     onError: (error) => {
-       console.error("Chat Error:", error);
-       setMessages((prev) => [
+      console.error("Chat Error:", error);
+      setMessages((prev) => [
         ...prev,
         { role: 'assistant', content: 'Sorry, I encountered an error. Please try again.' }
-       ]);
+      ]);
     }
   });
 
@@ -110,7 +110,7 @@ export default function ChatInterface() {
       {/* Messages Window */}
       <div className="flex-1 p-6 overflow-y-auto bg-[#F8FAFC] flex flex-col gap-6 scrollbar-thin scrollbar-thumb-slate-200">
         {loadingHistory && <div className="text-center text-slate-400 py-4"><Loader2 className="w-6 h-6 animate-spin mx-auto text-indigo-500" /></div>}
-        
+
         {messages.length === 0 && !loadingHistory && (
           <div className="text-center text-slate-500 my-auto py-10 px-6 bg-white/50 rounded-3xl border border-slate-100 border-dashed">
             <div className="w-16 h-16 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
@@ -123,21 +123,19 @@ export default function ChatInterface() {
 
         {messages.map((msg, idx) => (
           <div key={idx} className={`flex gap-4 ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
-            <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 shadow-sm transition-transform hover:scale-105 ${
-              msg.role === 'user' 
-                ? 'bg-gradient-to-br from-slate-700 to-slate-900 text-white' 
+            <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 shadow-sm transition-transform hover:scale-105 ${msg.role === 'user'
+                ? 'bg-gradient-to-br from-slate-700 to-slate-900 text-white'
                 : 'bg-gradient-to-br from-indigo-500 to-indigo-600 text-white'
-            }`}>
+              }`}>
               {msg.role === 'user' ? <User className="w-5 h-5" /> : <Bot className="w-5 h-5" />}
             </div>
-            
+
             <div className={`max-w-[85%] flex flex-col gap-3 ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
-              <div className={`px-5 py-3 rounded-2xl text-[15px] leading-relaxed shadow-sm ${
-                msg.role === 'user' 
-                  ? 'bg-indigo-600 text-white rounded-tr-none shadow-indigo-100' 
+              <div className={`px-5 py-3 rounded-2xl text-[15px] leading-relaxed shadow-sm ${msg.role === 'user'
+                  ? 'bg-indigo-600 text-white rounded-tr-none shadow-indigo-100'
                   : 'bg-white border border-slate-100 text-slate-800 rounded-tl-none shadow-slate-100'
-              }`}>
-                 {msg.content}
+                }`}>
+                {msg.content}
               </div>
 
               {/* Render Recommendations if Assistant Provided any */}
@@ -156,21 +154,21 @@ export default function ChatInterface() {
             </div>
           </div>
         ))}
-        
+
         {chatMutation.isPending && (
-           <div className="flex gap-4 flex-row animate-pulse">
-             <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 bg-indigo-100 text-indigo-600">
-               <Bot className="w-5 h-5" />
-             </div>
-             <div className="px-5 py-3 rounded-2xl text-[15px] shadow-sm bg-white border border-slate-100 text-slate-500 rounded-tl-none flex items-center gap-3">
-                <div className="flex gap-1">
-                  <span className="w-1.5 h-1.5 bg-indigo-400 rounded-full animate-bounce [animation-delay:-0.3s]"></span>
-                  <span className="w-1.5 h-1.5 bg-indigo-400 rounded-full animate-bounce [animation-delay:-0.15s]"></span>
-                  <span className="w-1.5 h-1.5 bg-indigo-400 rounded-full animate-bounce"></span>
-                </div>
-                Checking properties...
-             </div>
-           </div>
+          <div className="flex gap-4 flex-row animate-pulse">
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 bg-indigo-100 text-indigo-600">
+              <Bot className="w-5 h-5" />
+            </div>
+            <div className="px-5 py-3 rounded-2xl text-[15px] shadow-sm bg-white border border-slate-100 text-slate-500 rounded-tl-none flex items-center gap-3">
+              <div className="flex gap-1">
+                <span className="w-1.5 h-1.5 bg-indigo-400 rounded-full animate-bounce [animation-delay:-0.3s]"></span>
+                <span className="w-1.5 h-1.5 bg-indigo-400 rounded-full animate-bounce [animation-delay:-0.15s]"></span>
+                <span className="w-1.5 h-1.5 bg-indigo-400 rounded-full animate-bounce"></span>
+              </div>
+              Checking properties...
+            </div>
+          </div>
         )}
         <div ref={endOfMessagesRef} />
       </div>
