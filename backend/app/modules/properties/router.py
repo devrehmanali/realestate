@@ -4,8 +4,7 @@ from app.core.db import get_db
 from .service import PropertyService
 from .schemas import (
     PropertyListResponse, PropertyCreateRequest, PropertyCreateResponse,
-    PropertyFiltersRequest, SeedDataResponse, PropertyResponse,
-    PropertyUpdateRequest, PropertyUpdateResponse
+    SeedDataResponse, PropertyUpdateRequest, PropertyUpdateResponse
 )
 from typing import Optional
 
@@ -72,9 +71,16 @@ def delete_property(property_id: int, db: Session = Depends(get_db)):
 
 @router.post("/seed", response_model=SeedDataResponse)
 def seed_properties(db: Session = Depends(get_db)):
-    PropertyService.seed_data(db)
-    return SeedDataResponse(
-        success=True,
-        message="Database seeded successfully",
-        data={"status": "completed"}
-    )
+    records_added = PropertyService.seed_data(db)
+    if records_added == 0:
+        return SeedDataResponse(
+            success=True,
+            message="Database already contains data, no new records added",
+            data={"status": "already_seeded", "records_added": 0}
+        )
+    else:
+        return SeedDataResponse(
+            success=True,
+            message=f"Database seeded successfully with {records_added} properties",
+            data={"status": "completed", "records_added": records_added}
+        )

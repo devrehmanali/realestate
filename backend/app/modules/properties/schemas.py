@@ -26,17 +26,6 @@ class PropertyUpdateRequest(BaseModel):
     availability: Optional[bool] = None
     description: Optional[str] = None
 
-class PropertyFiltersRequest(BaseModel):
-    """Request schema for filtering properties"""
-    city: Optional[str] = None
-    max_price: Optional[float] = None
-    bedrooms: Optional[int] = None
-    property_type: Optional[str] = None
-
-class SeedDataRequest(BaseModel):
-    """Request schema for seeding data (empty body)"""
-    pass
-
 # Response schemas
 class PropertyResponse(PropertyBase):
     """Response schema for property data"""

@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session
 from .models import Property
 from .schemas import PropertyCreateRequest, PropertyUpdateRequest
+from .seed_data import SEED_PROPERTIES
 from typing import List, Optional
 
 class PropertyService:
@@ -54,3 +55,24 @@ class PropertyService:
             db.commit()
             return True
         return False
+
+    @staticmethod
+    def seed_data(db: Session) -> int:
+        """Seed the database with initial property data. Returns number of records added."""
+        # Check if data already exists
+        if db.query(Property).count() > 0:
+            return 0  # Already seeded
+
+        # Add seed properties
+        added_count = 0
+        for prop_data in SEED_PROPERTIES:
+            try:
+                property_obj = Property(**prop_data)
+                db.add(property_obj)
+                added_count += 1
+            except Exception as e:
+                print(f"Error adding property {prop_data}: {e}")
+                continue
+
+        db.commit()
+        return added_count
