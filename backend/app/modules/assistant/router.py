@@ -8,4 +8,9 @@ router = APIRouter()
 
 @router.post("/chat", response_model=ChatResponse)
 def chat_with_assistant(request: ChatRequest, db: Session = Depends(get_db)):
-    return AssistantService.process_chat(db, request)
+    result = AssistantService.process_chat(db, request)
+    return ChatResponse(
+        success=True,
+        message="Chat processed successfully",
+        data=result
+    )

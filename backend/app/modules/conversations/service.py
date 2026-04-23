@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 from .models import Conversation, Message
-from .schemas import ConversationCreate, MessageCreate
+from .schemas import ConversationCreateRequest, MessageCreateRequest
 from typing import Optional
 
 class ConversationService:

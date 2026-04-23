@@ -2,14 +2,14 @@ from sqlalchemy.orm import Session
 from app.modules.properties.service import PropertyService
 from app.modules.conversations.service import ConversationService
 from .processor import IntentProcessor
-from .schemas import ChatRequest, ChatResponse, FilterState, PropertyRecommendation
+from .schemas import ChatRequest, ChatResponseData, FilterState, PropertyRecommendation
 from typing import List
 
 class AssistantService:
     processor = IntentProcessor()
 
     @classmethod
-    def process_chat(cls, db: Session, request: ChatRequest) -> ChatResponse:
+    def process_chat(cls, db: Session, request: ChatRequest) -> ChatResponseData:
         # 1. Access/Create Conversation
         conversation = ConversationService.get_or_create_conversation(db, request.session_id)
         
@@ -63,7 +63,7 @@ class AssistantService:
         ConversationService.add_message(db, conversation.id, "assistant", message)
         ConversationService.update_filters(db, conversation.id, filters.dict())
 
-        return ChatResponse(
+        return ChatResponseData(
             type=response_type,
             message=message,
             filters=filters,

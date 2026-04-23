@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 from .models import Property
-from .schemas import PropertyCreate, PropertyUpdate
+from .schemas import PropertyCreateRequest, PropertyUpdateRequest
 from typing import List, Optional
 
 class PropertyService:
@@ -25,7 +25,7 @@ class PropertyService:
         return query.all()
 
     @staticmethod
-    def create_property(db: Session, property_data: PropertyCreate) -> Property:
+    def create_property(db: Session, property_data: PropertyCreateRequest) -> Property:
         db_property = Property(**property_data.dict())
         db.add(db_property)
         db.commit()
@@ -33,15 +33,24 @@ class PropertyService:
         return db_property
 
     @staticmethod
-    def seed_data(db: Session):
-        # Initial data if table is empty
-        if db.query(Property).count() == 0:
-            initial_properties = [
-                {"city": "Riyadh", "price": 450000, "bedrooms": 2, "property_type": "apartment", "description": "Modern apt in city center"},
-                {"city": "Riyadh", "price": 1200000, "bedrooms": 4, "property_type": "villa", "description": "Luxury villa with pool"},
-                {"city": "Jeddah", "price": 300000, "bedrooms": 1, "property_type": "apartment", "description": "Cozy studio near sea"},
-                {"city": "Dammam", "price": 600000, "bedrooms": 3, "property_type": "house", "description": "Family home"},
-            ]
-            for p in initial_properties:
-                db.add(Property(**p))
+    def get_property_by_id(db: Session, property_id: int) -> Optional[Property]:
+        return db.query(Property).filter(Property.id == property_id).first()
+
+    @staticmethod
+    def update_property(db: Session, property_id: int, property_data: PropertyUpdateRequest) -> Optional[Property]:
+        property_obj = db.query(Property).filter(Property.id == property_id).first()
+        if property_obj:
+            for key, value in property_data.dict(exclude_unset=True).items():
+                setattr(property_obj, key, value)
             db.commit()
+            db.refresh(property_obj)
+        return property_obj
+
+    @staticmethod
+    def delete_property(db: Session, property_id: int) -> bool:
+        property_obj = db.query(Property).filter(Property.id == property_id).first()
+        if property_obj:
+            db.delete(property_obj)
+            db.commit()
+            return True
+        return False
