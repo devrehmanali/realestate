@@ -40,8 +40,8 @@ export default function ChatInterface() {
   });
 
   useEffect(() => {
-    if (history?.messages && messages.length === 0) {
-      setMessages(history.messages.map((m: { role: 'user' | 'assistant'; content: string; timestamp: string }) => ({
+    if (history?.data?.messages && messages.length === 0) {
+      setMessages(history.data.messages.map((m: { role: 'user' | 'assistant'; content: string; timestamp: string }) => ({
         role: m.role,
         content: m.content,
         timestamp: m.timestamp
@@ -62,13 +62,13 @@ export default function ChatInterface() {
       });
       return res.data;
     },
-    onSuccess: (data) => {
+    onSuccess: (response) => {
       setMessages((prev) => [
         ...prev,
         { 
           role: 'assistant', 
-          content: data.message, 
-          recommendations: data.recommendations 
+          content: response.data.message, 
+          recommendations: response.data.recommendations 
         }
       ]);
     },
