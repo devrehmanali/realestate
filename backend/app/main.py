@@ -1,5 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from app.ai.agent import PropertyAgent
+from app.ai.openrouter_client import OpenRouterClient
 from app.modules.properties.router import router as properties_router
 from app.modules.assistant.router import router as assistant_router
 from app.modules.conversations.router import router as conversation_router
@@ -9,6 +11,18 @@ app = FastAPI(
     description="Modular Monolith API for an AI-powered real estate assistant",
     version="1.0.0"
 )
+
+
+@app.on_event("startup")
+async def startup_event():
+    app.state.openrouter_client = OpenRouterClient()
+    app.state.property_agent = PropertyAgent(app.state.openrouter_client)
+
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    app.state.property_agent = None
+    app.state.openrouter_client = None
 
 # CORS configuration
 app.add_middleware(

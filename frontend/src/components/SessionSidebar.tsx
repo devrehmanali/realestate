@@ -25,46 +25,59 @@ export default function SessionSidebar() {
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-4rem)] bg-white border-r border-gray-100 font-inter">
-      <div className="p-4 border-b border-gray-100">
+    <div className="flex flex-col h-[calc(100vh-4rem)] bg-white border-r border-slate-100 font-inter">
+      <div className="p-5 border-b border-slate-50">
         <button 
           onClick={handleNewChat}
-          className="w-full flex items-center justify-center gap-2 bg-blue-50 hover:bg-blue-100 text-blue-600 border border-blue-200 p-2.5 rounded-lg font-medium transition-colors"
+          className="w-full flex items-center justify-center gap-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-100 p-3 rounded-xl font-bold text-sm transition-all active:scale-95 shadow-sm shadow-indigo-50/50"
         >
           <PlusCircle className="w-5 h-5" />
-          New Chat
+          New Search
         </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-3 py-4 space-y-1">
-        <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider px-3 mb-2">
-           Recent Chats
-        </h3>
+      <div className="flex-1 overflow-y-auto px-4 py-6 space-y-2 scrollbar-thin scrollbar-thumb-slate-100">
+        <div className="flex items-center justify-between px-2 mb-3">
+          <h3 className="text-[11px] font-bold text-slate-400 uppercase tracking-[0.1em]">
+             History
+          </h3>
+          <span className="bg-slate-100 text-slate-500 text-[10px] px-1.5 py-0.5 rounded font-bold">
+            {conversations?.data?.length || 0}
+          </span>
+        </div>
         
         {isPending ? (
-           <div className="animate-pulse flex flex-col gap-2 px-3">
-              <div className="h-10 bg-gray-100 rounded-lg w-full"></div>
-              <div className="h-10 bg-gray-100 rounded-lg w-full"></div>
+           <div className="animate-pulse flex flex-col gap-3 px-1">
+              {[1, 2, 3].map(i => (
+                <div key={i} className="h-14 bg-slate-50 rounded-xl w-full border border-slate-100"></div>
+              ))}
            </div>
         ) : (
           conversations?.data?.map((conv: any) => {
             const isActive = conv.session_id === sessionId;
-            // Get city or type from filters to make title, else generic
             const filters = conv.metadata_filters || {};
-            const titleParts = [filters.city, filters.bedrooms ? `$\\{filters.bedrooms\\} Bed` : null, filters.type].filter(Boolean);
-            const displayTitle = titleParts.length > 0 ? titleParts.join(' ') : 'New Property Search';
+            const titleParts = [filters.city, filters.bedrooms ? `${filters.bedrooms} Bed` : null, filters.type].filter(Boolean);
+            const displayTitle = titleParts.length > 0 ? titleParts.join(' ') : 'Property Search';
             
             return (
               <button
                 key={conv.session_id}
                 onClick={() => setSessionId(conv.session_id)}
-                className={`w-full text-left px-3 py-3 rounded-lg flex items-center gap-3 transition-colors $\\{isActive ? 'bg-blue-600 text-white shadow-md' : 'text-gray-700 hover:bg-gray-100'\\}`}
+                className={`w-full text-left px-4 py-3.5 rounded-xl flex items-center gap-3.5 transition-all group ${
+                  isActive 
+                    ? 'bg-gradient-to-r from-indigo-600 to-indigo-700 text-white shadow-lg shadow-indigo-100' 
+                    : 'text-slate-600 hover:bg-slate-50 border border-transparent hover:border-slate-100'
+                }`}
               >
-                <MessageSquare className={`w-4 h-4 shrink-0 $\\{isActive ? 'text-blue-200' : 'text-gray-400'\\}`} />
-                <div className="overflow-hidden">
-                  <p className="text-sm font-medium truncate capitalize">{displayTitle}</p>
-                  <p className={`text-[10px] truncate $\\{isActive ? 'text-blue-200' : 'text-gray-400'\\}`}>
-                    {new Date(conv.updated_at).toLocaleDateString()}
+                <div className={`shrink-0 w-8 h-8 rounded-lg flex items-center justify-center ${
+                  isActive ? 'bg-white/20' : 'bg-slate-100 group-hover:bg-white transition-colors'
+                }`}>
+                  <MessageSquare className={`w-4 h-4 ${isActive ? 'text-white' : 'text-slate-400 group-hover:text-indigo-500'}`} />
+                </div>
+                <div className="overflow-hidden flex-1">
+                  <p className="text-[13px] font-bold truncate capitalize tracking-tight">{displayTitle}</p>
+                  <p className={`text-[10px] truncate mt-0.5 font-medium ${isActive ? 'text-indigo-100' : 'text-slate-400'}`}>
+                    {new Date(conv.updated_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
                   </p>
                 </div>
               </button>
