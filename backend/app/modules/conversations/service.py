@@ -5,6 +5,10 @@ from typing import Optional
 
 class ConversationService:
     @staticmethod
+    def get_all_conversations(db: Session):
+        return db.query(Conversation).order_by(Conversation.updated_at.desc()).all()
+
+    @staticmethod
     def get_or_create_conversation(db: Session, session_id: str) -> Conversation:
         conversation = db.query(Conversation).filter(Conversation.session_id == session_id).first()
         if not conversation:

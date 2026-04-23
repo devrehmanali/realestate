@@ -4,6 +4,7 @@ import { v4 as uuidv4 } from 'uuid';
 interface SessionState {
   sessionId: string;
   generateNewSession: () => void;
+  setSessionId: (id: string) => void;
 }
 
 export const useSessionStore = create<SessionState>((set) => ({
@@ -12,6 +13,10 @@ export const useSessionStore = create<SessionState>((set) => ({
     const newSession = uuidv4();
     if(typeof window !== 'undefined') localStorage.setItem('realestate_session', newSession);
     set({ sessionId: newSession });
+  },
+  setSessionId: (id: string) => {
+    if(typeof window !== 'undefined') localStorage.setItem('realestate_session', id);
+    set({ sessionId: id });
   }
 }));
 

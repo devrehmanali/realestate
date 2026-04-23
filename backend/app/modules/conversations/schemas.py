@@ -59,3 +59,7 @@ class ConversationGetResponse(APIResponse[ConversationResponse]):
 class ConversationFiltersUpdateResponse(APIResponse[ConversationResponse]):
     """Response schema for updating conversation filters"""
     pass
+
+class ConversationListResponse(APIResponse[List[ConversationResponse]]):
+    """Response schema for listing conversations"""
+    pass
