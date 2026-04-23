@@ -38,7 +38,7 @@ class ConversationResponse(ConversationBase):
     """Response schema for conversation data"""
     id: int
     created_at: datetime
-    updated_at: datetime
+    updated_at: Optional[datetime]
     messages: List[MessageResponse] = []
 
     class Config:
