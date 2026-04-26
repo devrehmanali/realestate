@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 
 load_dotenv(dotenv_path=Path(__file__).resolve().parents[2] / ".env")
 
-OPENROUTER_ENDPOINT = "https://api.openrouter.ai/v1/chat/completions"
+OPENROUTER_ENDPOINT = "https://openrouter.ai/api/v1/chat/completions"
 DEFAULT_MODEL = "gpt-4o-mini"
 
 

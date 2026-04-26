@@ -67,7 +67,8 @@ def format_filters_summary(filters: FilterState) -> str:
     if filters.type:
         parts.append(f"Type: {filters.type}")
 
-    return " | ".join(parts) if parts else "No specific filters"
+    # Updated to return lowercase string
+    return " | ".join(parts).lower() if parts else "No specific filters"
 
 
 def build_property_agent_prompt(

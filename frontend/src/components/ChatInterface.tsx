@@ -1,11 +1,12 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useRouter } from 'next/navigation';
 import { api } from '@/lib/axios';
-import { useSessionStore } from '@/lib/store';
-import { Send, User, Bot, Loader2 } from 'lucide-react';
+import { Send, User, Bot, Loader2, PlusCircle } from 'lucide-react';
 import PropertyCard from './PropertyCard';
+import { v4 as uuidv4 } from 'uuid';
 
 interface PropertyRecommendation {
   id: number;
@@ -24,33 +25,50 @@ interface Message {
   recommendations?: PropertyRecommendation[];
 }
 
-export default function ChatInterface() {
-  const { sessionId } = useSessionStore();
+interface ChatInterfaceProps {
+  sessionId: string;
+}
+
+export default function ChatInterface({ sessionId }: ChatInterfaceProps) {
+  const router = useRouter();
+  const queryClient = useQueryClient();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const endOfMessagesRef = useRef<HTMLDivElement>(null);
 
-  // Fetch history on mount
+  // Clear messages immediately when sessionId changes
+  useEffect(() => {
+    setMessages([]);
+    setInput('');
+  }, [sessionId]);
+
+  // Fetch history for this session
   const { data: history, isPending: loadingHistory } = useQuery({
     queryKey: ['conversation', sessionId],
     queryFn: async () => {
       const res = await api.get(`/conversations/${sessionId}`);
       return res.data;
     },
+    // Don't refetch unnecessarily
+    staleTime: 1000 * 60 * 2,
   });
 
+  // Populate messages from history (only when messages are empty — avoids overwriting live chat)
   useEffect(() => {
     if (history?.data?.messages && messages.length === 0) {
-      setMessages(history.data.messages.map((m: { role: 'user' | 'assistant'; content: string; timestamp: string }) => ({
-        role: m.role,
-        content: m.content,
-        timestamp: m.timestamp
-      })));
+      setMessages(
+        history.data.messages.map((m: { role: 'user' | 'assistant'; content: string; timestamp: string }) => ({
+          role: m.role,
+          content: m.content,
+          timestamp: m.timestamp,
+        }))
+      );
     }
   }, [history]);
 
+  // Auto-scroll to bottom on new messages
   useEffect(() => {
-    endOfMessagesRef.current?.scrollIntoView({ behavior: 'auto' });
+    endOfMessagesRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
   const chatMutation = useMutation({
@@ -58,7 +76,7 @@ export default function ChatInterface() {
       const res = await api.post('/assistant/chat', {
         user_input: text,
         session_id: sessionId,
-        history: [] // Not strictly needed since backend loads from persistent session
+        history: [],
       });
       return res.data;
     },
@@ -68,17 +86,18 @@ export default function ChatInterface() {
         {
           role: 'assistant',
           content: response.data.message,
-          recommendations: response.data.recommendations
-        }
+          recommendations: response.data.recommendations,
+        },
       ]);
+      // Refresh sidebar session list so new session appears
+      queryClient.invalidateQueries({ queryKey: ['conversations'] });
     },
-    onError: (error) => {
-      console.error("Chat Error:", error);
+    onError: () => {
       setMessages((prev) => [
         ...prev,
-        { role: 'assistant', content: 'Sorry, I encountered an error. Please try again.' }
+        { role: 'assistant', content: 'Sorry, I encountered an error. Please try again.' },
       ]);
-    }
+    },
   });
 
   const handleSend = (e: React.FormEvent) => {
@@ -91,6 +110,11 @@ export default function ChatInterface() {
     chatMutation.mutate(userText);
   };
 
+  const handleNewSearch = () => {
+    const newId = uuidv4();
+    router.push(`/chat/${newId}`);
+  };
+
   return (
     <div className="flex flex-col h-full bg-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] rounded-2xl overflow-hidden border border-slate-100 font-inter max-w-3xl mx-auto w-full">
       {/* Header */}
@@ -99,17 +123,31 @@ export default function ChatInterface() {
           <h2 className="text-white font-bold font-outfit text-xl tracking-tight">Real Estate Assistant</h2>
           <div className="flex items-center gap-2 mt-1">
             <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></span>
-            <p className="text-indigo-100 text-xs font-medium uppercase tracking-wider">Online & Responsive</p>
+            <p className="text-indigo-100 text-xs font-medium uppercase tracking-wider">Online &amp; Responsive</p>
           </div>
         </div>
-        <div className="bg-white/10 p-2.5 rounded-xl backdrop-blur-md">
-          <Bot className="text-white w-6 h-6" />
+        <div className="flex items-center gap-3">
+          <button
+            onClick={handleNewSearch}
+            title="New Search"
+            className="flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white text-xs font-bold px-3 py-2 rounded-xl backdrop-blur-md transition-all active:scale-95 border border-white/10"
+          >
+            <PlusCircle className="w-4 h-4" />
+            New Search
+          </button>
+          <div className="bg-white/10 p-2.5 rounded-xl backdrop-blur-md">
+            <Bot className="text-white w-6 h-6" />
+          </div>
         </div>
       </div>
 
       {/* Messages Window */}
       <div className="flex-1 p-6 overflow-y-auto bg-[#F8FAFC] flex flex-col gap-6 scrollbar-thin scrollbar-thumb-slate-200">
-        {loadingHistory && <div className="text-center text-slate-400 py-4"><Loader2 className="w-6 h-6 animate-spin mx-auto text-indigo-500" /></div>}
+        {loadingHistory && (
+          <div className="text-center text-slate-400 py-4">
+            <Loader2 className="w-6 h-6 animate-spin mx-auto text-indigo-500" />
+          </div>
+        )}
 
         {messages.length === 0 && !loadingHistory && (
           <div className="text-center text-slate-500 my-auto py-10 px-6 bg-white/50 rounded-3xl border border-slate-100 border-dashed">
@@ -117,36 +155,45 @@ export default function ChatInterface() {
               <Bot className="w-8 h-8" />
             </div>
             <h3 className="font-bold text-xl text-slate-800 mb-2 font-outfit">How can I help you today?</h3>
-            <p className="text-slate-500 max-w-sm mx-auto">I can help you find properties, compare prices, or check availability across Riyadh.</p>
+            <p className="text-slate-500 max-w-sm mx-auto">
+              I can help you find properties, compare prices, or check availability across Riyadh.
+            </p>
           </div>
         )}
 
         {messages.map((msg, idx) => (
           <div key={idx} className={`flex gap-4 ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
-            <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 shadow-sm transition-transform hover:scale-105 ${msg.role === 'user'
-                ? 'bg-gradient-to-br from-slate-700 to-slate-900 text-white'
-                : 'bg-gradient-to-br from-indigo-500 to-indigo-600 text-white'
-              }`}>
+            <div
+              className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 shadow-sm transition-transform hover:scale-105 ${
+                msg.role === 'user'
+                  ? 'bg-gradient-to-br from-slate-700 to-slate-900 text-white'
+                  : 'bg-gradient-to-br from-indigo-500 to-indigo-600 text-white'
+              }`}
+            >
               {msg.role === 'user' ? <User className="w-5 h-5" /> : <Bot className="w-5 h-5" />}
             </div>
 
             <div className={`max-w-[85%] flex flex-col gap-3 ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
-              <div className={`px-5 py-3 rounded-2xl text-[15px] leading-relaxed shadow-sm ${msg.role === 'user'
-                  ? 'bg-indigo-600 text-white rounded-tr-none shadow-indigo-100'
-                  : 'bg-white border border-slate-100 text-slate-800 rounded-tl-none shadow-slate-100'
-                }`}>
+              <div
+                className={`px-5 py-3 rounded-2xl text-[15px] leading-relaxed shadow-sm ${
+                  msg.role === 'user'
+                    ? 'bg-indigo-600 text-white rounded-tr-none shadow-indigo-100'
+                    : 'bg-white border border-slate-100 text-slate-800 rounded-tl-none shadow-slate-100'
+                }`}
+              >
                 {msg.content}
               </div>
 
-              {/* Render Recommendations if Assistant Provided any */}
               {msg.recommendations && msg.recommendations.length > 0 && (
                 <div className="flex flex-col gap-4 w-full mt-2 animate-in fade-in slide-in-from-bottom-2 duration-500">
                   <div className="flex items-center gap-2 px-1">
                     <div className="h-px bg-slate-200 flex-1"></div>
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Recommended for You</span>
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                      Recommended for You
+                    </span>
                     <div className="h-px bg-slate-200 flex-1"></div>
                   </div>
-                  {msg.recommendations.map(prop => (
+                  {msg.recommendations.map((prop) => (
                     <PropertyCard key={prop.id} property={prop} />
                   ))}
                 </div>
@@ -175,7 +222,10 @@ export default function ChatInterface() {
 
       {/* Input Form */}
       <div className="p-5 bg-white border-t border-slate-100">
-        <form onSubmit={handleSend} className="flex gap-3 bg-slate-50 p-2 rounded-2xl border border-slate-200 focus-within:border-indigo-400 focus-within:ring-4 focus-within:ring-indigo-50 transition-all duration-200">
+        <form
+          onSubmit={handleSend}
+          className="flex gap-3 bg-slate-50 p-2 rounded-2xl border border-slate-200 focus-within:border-indigo-400 focus-within:ring-4 focus-within:ring-indigo-50 transition-all duration-200"
+        >
           <input
             type="text"
             value={input}
@@ -192,7 +242,9 @@ export default function ChatInterface() {
             <Send className="w-5 h-5" />
           </button>
         </form>
-        <p className="text-[10px] text-center text-slate-400 mt-3 font-medium uppercase tracking-tight">AI may generate inaccurate information. Always verify details.</p>
+        <p className="text-[10px] text-center text-slate-400 mt-3 font-medium uppercase tracking-tight">
+          AI may generate inaccurate information. Always verify details.
+        </p>
       </div>
     </div>
   );

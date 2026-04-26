@@ -21,7 +21,7 @@ class IntentProcessor:
 
         # Extract city
         extracted_city = current_filters.city
-        for city in self.cities:
+        for city in self.cities: # Need to match regex here 
             if city in text:
                 extracted_city = city.capitalize()
                 break
@@ -35,7 +35,7 @@ class IntentProcessor:
 
         # Extract price (look for numbers that could be budget)
         extracted_price = current_filters.max_price
-        prices = re.findall(r"(\d+[\d,.]*)", text)
+        prices = re.findall(r"(\d+[\d,.]*)", text) # Need to match regex here 
         for p in prices:
             val = float(p.replace(",", "").replace(".", ""))
             if val > PRICE_THRESHOLD_MIN:
